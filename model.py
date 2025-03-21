@@ -1,11 +1,15 @@
+import os
+from dotenv import load_dotenv
 import psycopg2
 from datetime import datetime
 
+load_dotenv()
+
 # Database connection details (Replace these with your Neon.Tech credentials)
-DB_NAME = 'neondb'
-DB_USER = 'neondb_owner'
-DB_PASSWORD = 'npg_xfdGCbUaA3i4'
-DB_HOST = 'ep-shrill-cloud-a8m3s22c.eastus2.azure.neon.tech'
+DB_NAME = os.getenv('DB_NAME')
+DB_USER = os.getenv('DB_USER')
+DB_PASSWORD = os.getenv('DB_PASSWORD')
+DB_HOST = os.getenv('DB_HOST')
 
 def connection():
     """Establishes a database connection and returns the connection object."""
@@ -97,7 +101,8 @@ def fetch_all_items():
     
     except Exception as e:
         raise Exception(f"Database Error: {str(e)}")
-    
+
+
 
 def delete_item(item_id):
     """Deletes an item from the inventory."""
@@ -143,11 +148,9 @@ def update_item(item_id, itemName, category, price, quantity):
     except Exception as e:
         raise Exception(f"Database Error: {str(e)}")
 
-def add_record(operationName, debit, credit, date):
+def add_record(operationName, debit, credit, totalBalance, date):
     """Adds a financial record to the ledger."""
     try:
-        totalBalance = debit - credit  # Compute balance
-
         conn = connection()
         cur = conn.cursor()
         cur.execute("""
@@ -161,6 +164,33 @@ def add_record(operationName, debit, credit, date):
         cur.close()
         conn.close()
         return {"success": True, "id": record_id}
+    
+    except Exception as e:
+        raise Exception(f"Database Error: {str(e)}")
+    
+def fetch_all_records():
+    """Fetches all records from the ledger."""
+    try:
+        conn = connection()
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM ledgerPy ORDER BY date DESC")
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+        return rows
+    except Exception as e:
+        raise Exception(f"Database Error: {str(e)}")
+    
+def fetch_last_record():
+    """Fetches the last item added to the inventory."""
+    try:
+        conn = connection()
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM ledgerPy ORDER BY id DESC LIMIT 1")
+        record = cur.fetchone()
+        cur.close()
+        conn.close()
+        return record
     
     except Exception as e:
         raise Exception(f"Database Error: {str(e)}")
